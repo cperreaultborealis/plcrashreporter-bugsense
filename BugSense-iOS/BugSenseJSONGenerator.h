@@ -3,7 +3,7 @@
  BugSenseJSONGenerator.h
  BugSense-iOS
  
- Copyright (c) 2011 BugSense.com
+ Copyright (c) 2012 BugSense Inc.
  
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -27,11 +27,15 @@
  OTHER DEALINGS IN THE SOFTWARE.
  
  Author: Nick Toumpelis, nick@bugsense.com
+ Author: John Lianeris, jl@bugsense.com
  
  */
 
+@class PLCrashReport;
+
 @interface BugSenseJSONGenerator : NSObject
 
++ (NSString *) device;
 + (NSData *) JSONDataFromCrashReport:(PLCrashReport *)report userDictionary:(NSDictionary *)userDictionary;
 + (NSData *) JSONDataFromException:(NSException *)exception userDictionary:(NSDictionary *)userDictionary 
                                tag:(NSString *)tag;

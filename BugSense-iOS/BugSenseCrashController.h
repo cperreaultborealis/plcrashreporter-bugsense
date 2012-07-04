@@ -3,7 +3,7 @@
  BugSenseCrashController.h
  BugSense-iOS
  
- Copyright (c) 2011 BugSense.com
+ Copyright (c) 2012 BugSense Inc.
  
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -27,6 +27,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
  
  Author: Nick Toumpelis, nick@bugsense.com
+ Author: John Lianeris, jl@bugsense.com 
  
  */
 
@@ -44,5 +45,7 @@ UIKIT_EXTERN @interface BugSenseCrashController : NSObject
                                                sendImmediately:(BOOL)immediately;
 
 + (BOOL) logException:(NSException *)exception withTag:(NSString *)tag;
+
++ (BOOL) logAnalyticsWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
 
 @end

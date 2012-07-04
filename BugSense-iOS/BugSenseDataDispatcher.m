@@ -3,7 +3,7 @@
  BugSenseDataDispatcher.h
  BugSense-iOS
  
- Copyright (c) 2011 BugSense.com
+ Copyright (c) 2012 BugSense Inc.
  
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -27,6 +27,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
  
  Author: Nick Toumpelis, nick@bugsense.com
+ Author: John Lianeris, jl@bugsense.com
  
  */
 
@@ -38,10 +39,15 @@
 #define BUGSENSE_REPORTING_SERVICE_URL  @"http://www.bugsense.com/api/errors"
 #define BUGSENSE_HEADER                 @"X-BugSense-Api-Key"
 
+#define BUGSENSE_ANALYTICS_SERVICE_URL  @"http://ticks.bugsense.com/put/%@"
+
 #define kNoJSONGivenErrorMsg            @"BugSense --> No JSON data was given to post!"
 #define kServerRespondedMsg             @"BugSense --> Server responded with status code: %i"
 #define kErrorMsg                       @"BugSense --> Error: %@"
 #define kPostingJSONDataMsg             @"BugSense --> Posting JSON data..."
+#define kNoAnalyticsGivenErrorMsg       @"BugSense --> No analytics data was given to post!"
+#define kPostingAnalyticsDataMsg        @"BugSense --> Posting analytics data..."
+
 
 @interface BugSenseCrashController (Delegation)
 
@@ -84,6 +90,41 @@
         [[NSOperationQueue mainQueue] addOperation:operation];
         
         NSLog(kPostingJSONDataMsg);
+        
+        return YES;
+    }
+}
+
++ (BOOL)postAnalyticsData:(NSData *)analyticsData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate {
+    if (!analyticsData) {
+        NSLog(kNoAnalyticsGivenErrorMsg);
+        return NO;
+    } else {
+        NSURL *bugsenseURL = [NSURL URLWithString:[NSString stringWithFormat:BUGSENSE_ANALYTICS_SERVICE_URL, key]];
+        NSMutableURLRequest *bugsenseRequest = [[[NSMutableURLRequest alloc] initWithURL:bugsenseURL 
+                                                                             cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f] autorelease];
+        [bugsenseRequest setHTTPMethod:@"POST"];
+        [bugsenseRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+        
+        NSMutableData *postData = [NSMutableData data];
+        [postData appendData:[@"data=" dataUsingEncoding:NSASCIIStringEncoding]];
+        [postData appendData:analyticsData];
+        [bugsenseRequest setHTTPBody:postData];
+        
+        BSAFHTTPRequestOperation *operation = [BSAFHTTPRequestOperation operationWithRequest:bugsenseRequest 
+            completion:^(NSURLRequest *request, NSHTTPURLResponse *response, NSData *data, NSError *error) {
+                NSLog(kServerRespondedMsg, response.statusCode);
+                if (error) {
+                    NSLog(kErrorMsg, error);
+                } else {
+                    BOOL statusCodeAcceptable = [[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(200, 100)] containsIndex:[response statusCode]];
+                    [delegate operationCompleted:statusCodeAcceptable];
+                }
+        }];
+        
+        [[NSOperationQueue mainQueue] addOperation:operation];
+        
+        NSLog(kPostingAnalyticsDataMsg);
         
         return YES;
     }

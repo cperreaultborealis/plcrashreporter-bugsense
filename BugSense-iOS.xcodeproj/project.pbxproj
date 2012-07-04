@@ -72,6 +72,12 @@
 		0E653890158356380059FBA8 /* BSOpenUDID.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E65388D158356380059FBA8 /* BSOpenUDID.h */; };
 		0E653891158356380059FBA8 /* BSOpenUDID.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E65388E158356380059FBA8 /* BSOpenUDID.m */; };
 		0E653892158356380059FBA8 /* BSOpenUDID.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E65388E158356380059FBA8 /* BSOpenUDID.m */; };
+		0EF5670715A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */; };
+		0EF5670815A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */; };
+		0EF5670915A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */; };
+		0EF5670A15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EF5670615A3908D00121268 /* BugSenseAnalyticsGenerator.m */; };
+		0EF5670B15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EF5670615A3908D00121268 /* BugSenseAnalyticsGenerator.m */; };
+		0EF5670C15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EF5670615A3908D00121268 /* BugSenseAnalyticsGenerator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -246,6 +252,8 @@
 		05FCB7DB14966D6D00D1B469 /* BugSenseSymbolicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BugSenseSymbolicator.m; path = "BugSense-iOS/BugSenseSymbolicator.m"; sourceTree = SOURCE_ROOT; };
 		0E65388D158356380059FBA8 /* BSOpenUDID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSOpenUDID.h; path = "BugSense-iOS/Supporting Files/OpenUDID/BSOpenUDID.h"; sourceTree = SOURCE_ROOT; };
 		0E65388E158356380059FBA8 /* BSOpenUDID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BSOpenUDID.m; path = "BugSense-iOS/Supporting Files/OpenUDID/BSOpenUDID.m"; sourceTree = SOURCE_ROOT; };
+		0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugSenseAnalyticsGenerator.h; path = "BugSense-iOS/BugSenseAnalyticsGenerator.h"; sourceTree = SOURCE_ROOT; };
+		0EF5670615A3908D00121268 /* BugSenseAnalyticsGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BugSenseAnalyticsGenerator.m; path = "BugSense-iOS/BugSenseAnalyticsGenerator.m"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -294,6 +302,8 @@
 				05086E93143BBFC6008A8411 /* BugSenseCrashController.m */,
 				05FCB7DA14966D6D00D1B469 /* BugSenseSymbolicator.h */,
 				05FCB7DB14966D6D00D1B469 /* BugSenseSymbolicator.m */,
+				0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */,
+				0EF5670615A3908D00121268 /* BugSenseAnalyticsGenerator.m */,
 				05B4E62F14979C9A00D3EE63 /* BugSenseJSONGenerator.h */,
 				05B4E63014979C9A00D3EE63 /* BugSenseJSONGenerator.m */,
 				05B4E6351497A44F00D3EE63 /* BugSenseDataDispatcher.h */,
@@ -487,6 +497,7 @@
 				05B0BC1414A9FE90003C81B2 /* BugSenseSymbolicator+Private.h in Headers */,
 				05B0BC1614A9FED5003C81B2 /* BugSenseDataDispatcher+Private.h in Headers */,
 				0E65388F158356380059FBA8 /* BSOpenUDID.h in Headers */,
+				0EF5670715A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -508,6 +519,7 @@
 				05B0BBE714A9F3F1003C81B2 /* JSONKit.h in Headers */,
 				05B0BBE814A9F3F1003C81B2 /* BSReachability.h in Headers */,
 				0E653890158356380059FBA8 /* BSOpenUDID.h in Headers */,
+				0EF5670915A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -516,6 +528,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				05FCB7511492A43800D1B469 /* BugSenseCrashController.h in Headers */,
+				0EF5670815A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -822,6 +835,7 @@
 				055CBBE814A9D8EA009710F8 /* JSONKit.m in Sources */,
 				055CBBEC14A9D8FB009710F8 /* BSReachability.m in Sources */,
 				0E653891158356380059FBA8 /* BSOpenUDID.m in Sources */,
+				0EF5670A15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -853,6 +867,7 @@
 				05B0BBD014A9F37A003C81B2 /* JSONKit.m in Sources */,
 				05B0BBD114A9F37A003C81B2 /* BSReachability.m in Sources */,
 				0E653892158356380059FBA8 /* BSOpenUDID.m in Sources */,
+				0EF5670C15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -864,6 +879,7 @@
 				05B4E6331497A01200D3EE63 /* BugSenseSymbolicator.m in Sources */,
 				05B4E6341497A01200D3EE63 /* BugSenseJSONGenerator.m in Sources */,
 				05FCB7441492A3F800D1B469 /* BugSenseCrashController.m in Sources */,
+				0EF5670B15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

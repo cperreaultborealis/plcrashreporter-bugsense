@@ -1,6 +1,6 @@
 /*
  
- BugSenseDataDispatcher.h
+ BugSenseSymbolicator.h
  BugSense-iOS
  
  Copyright (c) 2012 BugSense Inc.
@@ -26,14 +26,14 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
  
- Author: Nick Toumpelis, nick@bugsense.com
  Author: John Lianeris, jl@bugsense.com
  
  */
 
-@interface BugSenseDataDispatcher : NSObject
+#import <Foundation/Foundation.h>
 
-+ (BOOL) postJSONData:(NSData *)jsonData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate;
-+ (BOOL) postAnalyticsData:(NSData *)analyticsData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate;
+@interface BugSenseAnalyticsGenerator : NSObject
+
++ (NSData *)analyticsDataWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
 
 @end

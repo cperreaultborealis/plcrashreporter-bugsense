@@ -3,7 +3,7 @@
  BugSenseCrashController.m
  BugSense-iOS
  
- Copyright (c) 2011 BugSense.com
+ Copyright (c) 2012 BugSense Inc.
  
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -27,6 +27,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
  
  Author: Nick Toumpelis, nick@bugsense.com
+ Author: John Lianeris, jl@bugsense.com
  
  */
 
@@ -37,6 +38,7 @@
 #import "BugSenseSymbolicator.h"
 #import "BugSenseJSONGenerator.h"
 #import "BugSenseDataDispatcher.h"
+#import "BugSenseAnalyticsGenerator.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -52,6 +54,7 @@
 #define kProcessingMsgString            @"BugSense --> Processing crash report..."
 #define kCrashMsgString                 @"BugSense --> Crashed on %@, with signal %@ (code %@, address=0x%" PRIx64 ")"
 #define kCrashReporterErrorString       @"BugSense --> Error: Could not enable crash reporting due to: %@"
+#define kAnalyticsErrorString           @"BugSense --> Could not prepare analytics string."
 
 
 #pragma mark - Private interface
@@ -238,6 +241,19 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
     }
 }
 
+#pragma mark - Analytics methods
++ (BOOL) logAnalyticsWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
+    NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraData];
+    if (!analyticsData) {
+        NSLog(kAnalyticsErrorString);
+        return NO;
+    }
+    
+    // Send the JSON string to the BugSense servers
+    [BugSenseDataDispatcher postAnalyticsData:analyticsData withAPIKey:_APIKey delegate:nil];
+    
+    return YES;
+}
 
 #pragma mark - Singleton lifecycle
 #ifndef __clang_analyzer__
