@@ -46,6 +46,6 @@ UIKIT_EXTERN @interface BugSenseCrashController : NSObject
 
 + (BOOL) logException:(NSException *)exception withTag:(NSString *)tag;
 
-+ (BOOL) logAnalyticsWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
++ (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
 
 @end
