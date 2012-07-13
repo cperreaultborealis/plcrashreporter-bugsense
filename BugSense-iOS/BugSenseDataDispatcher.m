@@ -36,8 +36,9 @@
 
 #import "BugSenseDataDispatcher.h"
 
-#define BUGSENSE_REPORTING_SERVICE_URL  @"http://www.bugsense.com/api/errors"
-#define BUGSENSE_HEADER                 @"X-BugSense-Api-Key"
+#define BUGSENSE_REPORTING_SERVICE_URL          @"http://www.bugsense.com/api/errors"
+#define BUGSENSE_REPORTING_SERVICE_SECURE_URL   @"https://www.bugsense.com/api/errors"
+#define BUGSENSE_HEADER                         @"X-BugSense-Api-Key"
 
 #define BUGSENSE_ANALYTICS_SERVICE_URL  @"http://ticks.bugsense.com/put/%@"
 
@@ -63,7 +64,11 @@
         NSLog(kNoJSONGivenErrorMsg);
         return NO;
     } else {
-        NSURL *bugsenseURL = [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_URL];
+        
+        NSString *reqSysVer = @"4.0";
+        NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
+        NSURL *bugsenseURL = ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) ? [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_SECURE_URL] : [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_URL];
+                
         NSMutableURLRequest *bugsenseRequest = [[[NSMutableURLRequest alloc] initWithURL:bugsenseURL 
             cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f] autorelease];
         [bugsenseRequest setHTTPMethod:@"POST"];
