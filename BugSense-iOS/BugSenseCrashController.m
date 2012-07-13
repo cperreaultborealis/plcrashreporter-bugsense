@@ -242,7 +242,7 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 
 #pragma mark - Analytics methods
-+ (BOOL) logAnalyticsWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
++ (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
     NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraData];
     if (!analyticsData) {
         NSLog(kAnalyticsErrorString);
