@@ -47,14 +47,15 @@
     NSLocale *locale = [NSLocale currentLocale];
     NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     
-    NSString *mainPayloadStr = [NSString stringWithFormat:@"' \"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":",
+    NSString *mainPayloadStr = [NSString stringWithFormat:@"' \"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%.0f\":",
                                 kBugSenseAnalyticsVersion,
                                 [BSOpenUDID value],
                                 tag,
                                 platform,
                                 systemVersion,
                                 appVersion,
-                                [locale localeIdentifier]];
+                                [locale localeIdentifier],
+                                [[NSDate date] timeIntervalSince1970]];
     
     NSData *mainPayloadData = [mainPayloadStr dataUsingEncoding:NSASCIIStringEncoding];
     NSUInteger mainPayloadLength = [mainPayloadData length];
@@ -70,7 +71,8 @@
     if (extraDataMaxLength > [[extraData dataUsingEncoding:NSASCIIStringEncoding] length]) {
         payloadStr = [NSString stringWithFormat:@"%@\"%@\" '", mainPayloadStr, extraData];
     } else {
-        payloadStr = [NSString stringWithFormat:@"%@\"%@\" '", mainPayloadStr, [extraData substringToIndex:extraDataMaxLength]];
+        extraDataMaxLength -= 3;
+        payloadStr = [NSString stringWithFormat:@"%@\"%@...\" '", mainPayloadStr, [extraData substringToIndex:extraDataMaxLength]];
     }
     
     NSData *payloadData = [payloadStr dataUsingEncoding:NSASCIIStringEncoding];
