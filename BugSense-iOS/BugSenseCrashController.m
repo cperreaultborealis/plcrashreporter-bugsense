@@ -86,8 +86,6 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
 
 - (void) initiateReporting;
 
-- (NSString *) analyticsSessionInfo;
-
 - (id) initWithAPIKey:(NSString *)bugSenseAPIKey 
        userDictionary:(NSDictionary *)userDictionary 
       sendImmediately:(BOOL)immediately;
