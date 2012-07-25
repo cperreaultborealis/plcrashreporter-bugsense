@@ -33,7 +33,7 @@
 
 #define BUGSENSE_LOG(__EXCEPTION, __TAG) [BugSenseCrashController logException:__EXCEPTION withTag:__TAG]
 
-UIKIT_EXTERN @interface BugSenseCrashController : NSObject
+OBJC_EXPORT @interface BugSenseCrashController : NSObject <UIAlertViewDelegate>
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey;
 

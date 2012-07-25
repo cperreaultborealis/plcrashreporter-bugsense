@@ -33,7 +33,7 @@
 
 @interface BugSenseDataDispatcher : NSObject
 
-+ (BOOL) postJSONData:(NSData *)jsonData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate;
++ (BOOL) postJSONData:(NSData *)jsonData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate showFeedback:(BOOL)feedbackOption;
 + (BOOL) postAnalyticsData:(NSData *)analyticsData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate;
 
 @end

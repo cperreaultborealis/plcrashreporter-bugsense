@@ -53,8 +53,9 @@
 #define kGeneratingJSONDataMsg  @"BugSense --> Generating JSON data from crash report..."
 #define kJSONErrorMsg           @"BugSense --> Something unusual happened during the generation of JSON data!"
 #define kGeneratingProcessMsg   @"BugSense --> Generating JSON data from crash report: %d/14"
+#define kGeneratingProcessExceptionMsg   @"BugSense --> Generating JSON data from exception: %d/6"
 
-#define kBugSenseFrameworkVersion @"2.0.4"
+#define kBugSenseFrameworkVersion @"2.0.6"
 #define kBugSensePlatform @"iOS"
 
 @implementation BugSenseJSONGenerator
@@ -562,6 +563,8 @@
         if (![exception objectForKey:@"where"] && stacktrace && stacktrace.count > 0) {
             [exception setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
+        
+        [exception setObject:@"crash" forKey:@"rtype"];
 
         NSLog(kGeneratingProcessMsg, 6);
         
@@ -701,7 +704,10 @@
                                         forKey:@"gps_on"];
         }
         
-        [application_environment setObject:[self carrierName] forKey:@"carrier"];
+        NSLog(kGeneratingProcessExceptionMsg, 1);
+        
+        if ([self carrierName])
+            [application_environment setObject:[self carrierName] forKey:@"carrier"];
         
         [application_environment setObject:[self languages] forKey:@"languages"];
         
@@ -725,6 +731,8 @@
                 [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"wifi_on"];
                 break;
         }
+        
+        NSLog(kGeneratingProcessExceptionMsg, 2);
         
         // ----osver
         [application_environment setObject:[[UIDevice currentDevice] systemVersion] forKey:@"osver"];
@@ -750,11 +758,15 @@
             [exceptionDict setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
         
+        [exception setObject:@"exception" forKey:@"rtype"];
+        
         if (stacktrace.count > 0) {
             [exceptionDict setObject:stacktrace forKey:@"backtrace"];
         } else {
             [exceptionDict setObject:@"No backtrace available [?]" forKey:@"backtrace"];
         }
+        
+        NSLog(kGeneratingProcessExceptionMsg, 3);
         
         // ----klass, message
         [exceptionDict setObject:exception.name forKey:@"klass"];
@@ -770,11 +782,15 @@
             [request setObject:[NSString stringWithFormat:@"log-%@",tag] forKey:@"tag"];
         }
         
+        NSLog(kGeneratingProcessExceptionMsg, 4);
+        
         // --execname
         [application_environment setObject:[self executableName] forKey:@"execname"];
         
         // --budid
         [application_environment setObject:[BSOpenUDID value] forKey:@"budid"];
+        
+        NSLog(kGeneratingProcessExceptionMsg, 5);
         
         // root
         NSMutableDictionary *rootDictionary = [[[NSMutableDictionary alloc] init] autorelease];
@@ -785,6 +801,9 @@
         NSString *jsonString = 
         [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)[rootDictionary bs_JSONString],
                                                 NULL, CFSTR("!*'();:@&=+$,/?%#[]"), kCFStringEncodingUTF8) autorelease];
+        
+        NSLog(kGeneratingProcessExceptionMsg, 6);
+        
         return [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     } @catch (NSException *jsonException) {
         NSLog(kJSONErrorMsg);
