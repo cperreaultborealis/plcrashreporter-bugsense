@@ -76,6 +76,7 @@ experienced. Do you want to get it from the App Store?", nil)
 
 - (PLCrashReporter *) crashReporter;
 - (PLCrashReport *) crashReport;
+- (NSString *) analyticsSessionInfo;
 - (NSString *) currentIPAddress;
 - (NSString *) device;
 - (dispatch_queue_t) operationsQueue;
@@ -84,6 +85,8 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
 - (void) performPostCrashOperations;
 
 - (void) initiateReporting;
+
+- (NSString *) analyticsSessionInfo;
 
 - (id) initWithAPIKey:(NSString *)bugSenseAPIKey 
        userDictionary:(NSDictionary *)userDictionary 
@@ -105,13 +108,15 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
     PLCrashReporter     *_crashReporter;
     PLCrashReport       *_crashReport;
     
+    NSString            *_analyticsSessionInfo;
+    
     NSURL               *_storeLinkURL;
 }
 
-static BugSenseCrashController *_sharedCrashController = nil;
-static NSDictionary            *_userDictionary;
-static NSString                *_APIKey;
-static BOOL                    _immediately;
+static BugSenseCrashController  *_sharedCrashController = nil;
+static NSDictionary             *_userDictionary;
+static NSString                 *_APIKey;
+static BOOL                     _immediately;
 
 #pragma mark - Ivar accessors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +170,9 @@ static BOOL                    _immediately;
     return _operationsQueue;
 }
 
+- (NSString *)analyticsSessionInfo {
+    return _analyticsSessionInfo;
+}
 
 #pragma mark - Crash callback function
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,8 +265,25 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 
 #pragma mark - Analytics methods
+
+- (void) startInstanceAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
+
+    _analyticsSessionInfo = [analyticsSessionInfo retain];
+
+    [BugSenseCrashController sendEventWithTag:@"_ping" andExtraData:@""];
+}
+
++ (void) startAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
+    [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
+}
+
++ (void) stopAnalyticsSession {
+    [BugSenseCrashController sendEventWithTag:@"_gnip" andExtraData:@""];
+}
+
 + (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
-    NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraData];
+    NSString *extraDataStr = [NSString stringWithFormat:@"%@:%@", [_sharedCrashController analyticsSessionInfo], extraData];
+    NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraDataStr];
     if (!analyticsData) {
         NSLog(kAnalyticsErrorString);
         return NO;
@@ -273,14 +298,16 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 #pragma mark - Singleton lifecycle
 #ifndef __clang_analyzer__
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)bugSenseAPIKey 
-                                                userDictionary:(NSDictionary *)userDictionary
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
+                                                userDictionary:(NSDictionary *)userDictionary 
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo 
                                                sendImmediately:(BOOL)immediately {
     static dispatch_once_t oncePredicate;
     dispatch_once(&oncePredicate, ^{
         if (!_sharedCrashController) {
-            [[self alloc] initWithAPIKey:bugSenseAPIKey userDictionary:userDictionary sendImmediately:immediately];
+            [[self alloc] initWithAPIKey:APIKey userDictionary:userDictionary analyticsSessionInfo:analyticsSessionInfo sendImmediately:immediately];
             [_sharedCrashController initiateReporting];
+            [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
         }
     });
     
@@ -288,23 +315,26 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)bugSenseAPIKey 
-                                                userDictionary:(NSDictionary *)userDictionary {
-    return [self sharedInstanceWithBugSenseAPIKey:bugSenseAPIKey userDictionary:userDictionary sendImmediately:NO];
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
+                                                userDictionary:(NSDictionary *)userDictionary
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo {
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:userDictionary analyticsSessionInfo:analyticsSessionInfo sendImmediately:NO];
 }
 
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo {
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:nil analyticsSessionInfo:analyticsSessionInfo];
+}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)bugSenseAPIKey {
-    return [self sharedInstanceWithBugSenseAPIKey:bugSenseAPIKey userDictionary:nil];
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey {
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey analyticsSessionInfo:nil];
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id) initWithAPIKey:(NSString *)bugSenseAPIKey 
        userDictionary:(NSDictionary *)userDictionary 
+ analyticsSessionInfo:(NSString *)analyticsSessionInfo 
       sendImmediately:(BOOL)immediately {
     if ((self = [super init])) {
         _operationCompleted = NO;
@@ -317,6 +347,10 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
             _userDictionary = [userDictionary retain];
         } else {
             _userDictionary = nil;
+        }
+        
+        if (analyticsSessionInfo) {
+            _analyticsSessionInfo = [analyticsSessionInfo retain];
         }
         
         _immediately = immediately;

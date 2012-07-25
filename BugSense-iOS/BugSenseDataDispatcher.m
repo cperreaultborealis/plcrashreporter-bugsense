@@ -129,7 +129,9 @@
                     NSLog(kErrorMsg, error);
                 } else {
                     BOOL statusCodeAcceptable = [[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(200, 100)] containsIndex:[response statusCode]];
-                    [delegate operationCompleted:statusCodeAcceptable];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [delegate operationCompleted:statusCodeAcceptable withData:nil];
+                    });
                 }
         }];
         

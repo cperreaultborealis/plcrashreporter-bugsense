@@ -38,14 +38,21 @@ OBJC_EXPORT @interface BugSenseCrashController : NSObject <UIAlertViewDelegate>
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey;
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
-                                                userDictionary:(NSDictionary *)userDictionary;
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo;
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
-                                                userDictionary:(NSDictionary *)userDictionary
+                                                userDictionary:(NSDictionary *)userDictionary 
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo;
+
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
+                                                userDictionary:(NSDictionary *)userDictionary 
+                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo 
                                                sendImmediately:(BOOL)immediately;
 
 + (BOOL) logException:(NSException *)exception withTag:(NSString *)tag;
 
++ (void) startAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo;
++ (void) stopAnalyticsSession;
 + (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
 
 @end
