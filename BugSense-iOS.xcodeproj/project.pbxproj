@@ -68,6 +68,12 @@
 		05FCB7511492A43800D1B469 /* BugSenseCrashController.h in Headers */ = {isa = PBXBuildFile; fileRef = 05086E92143BBFC6008A8411 /* BugSenseCrashController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		05FCB7531492A45F00D1B469 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 058D4C4C143BC2EE002A01CA /* InfoPlist.strings */; };
 		05FCB7DD14966D6D00D1B469 /* BugSenseSymbolicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 05FCB7DB14966D6D00D1B469 /* BugSenseSymbolicator.m */; };
+		0E2B2A8D15C082A700C61959 /* BugSensePersistence.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E2B2A8B15C082A700C61959 /* BugSensePersistence.h */; };
+		0E2B2A8E15C082A700C61959 /* BugSensePersistence.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E2B2A8B15C082A700C61959 /* BugSensePersistence.h */; };
+		0E2B2A8F15C082A700C61959 /* BugSensePersistence.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E2B2A8B15C082A700C61959 /* BugSensePersistence.h */; };
+		0E2B2A9015C082A700C61959 /* BugSensePersistence.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B2A8C15C082A700C61959 /* BugSensePersistence.m */; };
+		0E2B2A9115C082A700C61959 /* BugSensePersistence.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B2A8C15C082A700C61959 /* BugSensePersistence.m */; };
+		0E2B2A9215C082A700C61959 /* BugSensePersistence.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B2A8C15C082A700C61959 /* BugSensePersistence.m */; };
 		0E65388F158356380059FBA8 /* BSOpenUDID.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E65388D158356380059FBA8 /* BSOpenUDID.h */; };
 		0E653890158356380059FBA8 /* BSOpenUDID.h in Headers */ = {isa = PBXBuildFile; fileRef = 0E65388D158356380059FBA8 /* BSOpenUDID.h */; };
 		0E653891158356380059FBA8 /* BSOpenUDID.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E65388E158356380059FBA8 /* BSOpenUDID.m */; };
@@ -250,6 +256,8 @@
 		05FCB73514929FE500D1B469 /* libBugSense-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libBugSense-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		05FCB7DA14966D6D00D1B469 /* BugSenseSymbolicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugSenseSymbolicator.h; path = "BugSense-iOS/BugSenseSymbolicator.h"; sourceTree = SOURCE_ROOT; };
 		05FCB7DB14966D6D00D1B469 /* BugSenseSymbolicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BugSenseSymbolicator.m; path = "BugSense-iOS/BugSenseSymbolicator.m"; sourceTree = SOURCE_ROOT; };
+		0E2B2A8B15C082A700C61959 /* BugSensePersistence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugSensePersistence.h; path = "BugSense-iOS/BugSensePersistence.h"; sourceTree = SOURCE_ROOT; };
+		0E2B2A8C15C082A700C61959 /* BugSensePersistence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BugSensePersistence.m; path = "BugSense-iOS/BugSensePersistence.m"; sourceTree = SOURCE_ROOT; };
 		0E65388D158356380059FBA8 /* BSOpenUDID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSOpenUDID.h; path = "BugSense-iOS/Supporting Files/OpenUDID/BSOpenUDID.h"; sourceTree = SOURCE_ROOT; };
 		0E65388E158356380059FBA8 /* BSOpenUDID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BSOpenUDID.m; path = "BugSense-iOS/Supporting Files/OpenUDID/BSOpenUDID.m"; sourceTree = SOURCE_ROOT; };
 		0EF5670515A3908D00121268 /* BugSenseAnalyticsGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugSenseAnalyticsGenerator.h; path = "BugSense-iOS/BugSenseAnalyticsGenerator.h"; sourceTree = SOURCE_ROOT; };
@@ -308,6 +316,8 @@
 				05B4E63014979C9A00D3EE63 /* BugSenseJSONGenerator.m */,
 				05B4E6351497A44F00D3EE63 /* BugSenseDataDispatcher.h */,
 				05B4E6361497A44F00D3EE63 /* BugSenseDataDispatcher.m */,
+				0E2B2A8B15C082A700C61959 /* BugSensePersistence.h */,
+				0E2B2A8C15C082A700C61959 /* BugSensePersistence.m */,
 				055CBBED14A9DA37009710F8 /* Private Headers */,
 				058D4C12143BC2D6002A01CA /* Supporting Files */,
 			);
@@ -498,6 +508,7 @@
 				05B0BC1614A9FED5003C81B2 /* BugSenseDataDispatcher+Private.h in Headers */,
 				0E65388F158356380059FBA8 /* BSOpenUDID.h in Headers */,
 				0EF5670715A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
+				0E2B2A8D15C082A700C61959 /* BugSensePersistence.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,6 +531,7 @@
 				05B0BBE814A9F3F1003C81B2 /* BSReachability.h in Headers */,
 				0E653890158356380059FBA8 /* BSOpenUDID.h in Headers */,
 				0EF5670915A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
+				0E2B2A8F15C082A700C61959 /* BugSensePersistence.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -529,6 +541,7 @@
 			files = (
 				05FCB7511492A43800D1B469 /* BugSenseCrashController.h in Headers */,
 				0EF5670815A3908D00121268 /* BugSenseAnalyticsGenerator.h in Headers */,
+				0E2B2A8E15C082A700C61959 /* BugSensePersistence.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -836,6 +849,7 @@
 				055CBBEC14A9D8FB009710F8 /* BSReachability.m in Sources */,
 				0E653891158356380059FBA8 /* BSOpenUDID.m in Sources */,
 				0EF5670A15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
+				0E2B2A9015C082A700C61959 /* BugSensePersistence.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -868,6 +882,7 @@
 				05B0BBD114A9F37A003C81B2 /* BSReachability.m in Sources */,
 				0E653892158356380059FBA8 /* BSOpenUDID.m in Sources */,
 				0EF5670C15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
+				0E2B2A9215C082A700C61959 /* BugSensePersistence.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -880,6 +895,7 @@
 				05B4E6341497A01200D3EE63 /* BugSenseJSONGenerator.m in Sources */,
 				05FCB7441492A3F800D1B469 /* BugSenseCrashController.m in Sources */,
 				0EF5670B15A3908D00121268 /* BugSenseAnalyticsGenerator.m in Sources */,
+				0E2B2A9115C082A700C61959 /* BugSensePersistence.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

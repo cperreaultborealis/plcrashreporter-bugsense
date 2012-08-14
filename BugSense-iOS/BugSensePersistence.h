@@ -1,6 +1,6 @@
 /*
  
- BugSenseDataDispatcher.h
+ BugSensePersistence.h
  BugSense-iOS
  
  Copyright (c) 2012 BugSense Inc.
@@ -26,16 +26,24 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
  
- Author: Nick Toumpelis, nick@bugsense.com
- Author: John Lianeris, jl@bugsense.com
+ Author: John Lianeris, jl@bugsense.com 
  
  */
 
-@class BugSenseCrashController;
+#import <Foundation/Foundation.h>
 
-@interface BugSenseDataDispatcher : NSObject
+@interface BugSensePersistence : NSObject
 
-+ (BOOL) postJSONData:(NSData *)jsonData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate showFeedback:(BOOL)feedbackOption;
-+ (BOOL) postAnalyticsData:(NSData *)analyticsData withAPIKey:(NSString *)key delegate:(BugSenseCrashController *)delegate;
++ (void)createDirectoryStructure;
+
++ (BOOL)sendOrQueuePing:(NSData *)ping;
++ (BOOL)sendAllPendingPings;
++ (NSArray *)pendingPings;
++ (BOOL)queuePing:(NSData *)ping;
+
++ (BOOL)sendOrQueueTick:(NSData *)tick;
++ (BOOL)sendAllPendingTicks;
++ (NSArray *)pendingTicks;
++ (BOOL)queueTick:(NSData *)tick;
 
 @end

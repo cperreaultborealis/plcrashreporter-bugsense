@@ -55,4 +55,6 @@ OBJC_EXPORT @interface BugSenseCrashController : NSObject <UIAlertViewDelegate>
 + (void) stopAnalyticsSession;
 + (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
 
++ (NSString *)apiKey;
+
 @end

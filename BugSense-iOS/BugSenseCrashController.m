@@ -39,6 +39,7 @@
 #import "BugSenseJSONGenerator.h"
 #import "BugSenseDataDispatcher.h"
 #import "BugSenseAnalyticsGenerator.h"
+#import "BugSensePersistence.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -99,7 +100,7 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
 #pragma mark - Implementation
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 @implementation BugSenseCrashController {
-    dispatch_queue_t    _operationsQueue; 
+    dispatch_queue_t    _operationsQueue;
     
     BOOL                _operationCompleted;
     
@@ -170,6 +171,10 @@ static BOOL                     _immediately;
 
 - (NSString *)analyticsSessionInfo {
     return _analyticsSessionInfo;
+}
+
++ (NSString *)apiKey {
+    return _APIKey;
 }
 
 #pragma mark - Crash callback function
@@ -265,21 +270,36 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 #pragma mark - Analytics methods
 
 - (void) startInstanceAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
-
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     _analyticsSessionInfo = [analyticsSessionInfo retain];
-
+    
+    dispatch_async([self operationsQueue], ^{
+        [BugSensePersistence createDirectoryStructure];
+        [BugSensePersistence sendAllPendingPings];
+    });
     [BugSenseCrashController sendEventWithTag:@"_ping" andExtraData:@""];
 }
 
 + (void) startAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
 }
 
 + (void) stopAnalyticsSession {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    dispatch_async([_sharedCrashController operationsQueue], ^{
+        [BugSensePersistence sendAllPendingPings];
+    });
+    
     [BugSenseCrashController sendEventWithTag:@"_gnip" andExtraData:@""];
 }
 
 + (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
     NSString *extraDataStr = [NSString stringWithFormat:@"%@:%@", [_sharedCrashController analyticsSessionInfo], extraData];
     NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraDataStr];
     if (!analyticsData) {
@@ -288,7 +308,16 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
     }
     
     // Send the JSON string to the BugSense servers
-    [BugSenseDataDispatcher postAnalyticsData:analyticsData withAPIKey:_APIKey delegate:nil];
+    if ([tag isEqualToString:@"_ping"] || [tag isEqualToString:@"_gnip"]){
+        dispatch_async([_sharedCrashController operationsQueue], ^{
+            [BugSensePersistence sendOrQueuePing:analyticsData];
+        });
+    } else {
+        // TODO: cache it
+        dispatch_async([_sharedCrashController operationsQueue], ^{
+            [BugSenseDataDispatcher postAnalyticsData:analyticsData withAPIKey:_APIKey delegate:nil];
+        });
+    }
     
     return YES;
 }
@@ -527,6 +556,26 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
         }
     } else {
         _operationCompleted = YES;
+    }
+}
+
+- (void)analyticsOperationCompleted:(BOOL)result forData:(NSData *)data {
+    if (result == NO) {
+        
+        // Parsing the data that were sent, to see where it should be queued
+        NSString *str = [NSString stringWithUTF8String:[data bytes]];
+        NSArray *parts = [[str substringWithRange:NSMakeRange(2, [str length] - 2)] componentsSeparatedByString:@":"];
+        NSString *tag = [(NSString *)[parts objectAtIndex:2] substringWithRange:NSMakeRange(1, [(NSString *)[parts objectAtIndex:2] length] - 2)];
+        
+        dispatch_async([_sharedCrashController operationsQueue], ^{
+            
+            if ([tag isEqualToString:@"_ping"] || [tag isEqualToString:@"_gnip"]) {
+                [BugSensePersistence queuePing:data];
+            } else {
+                
+            }
+            
+        });
     }
 }
 

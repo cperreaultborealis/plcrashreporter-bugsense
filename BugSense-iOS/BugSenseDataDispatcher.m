@@ -53,6 +53,7 @@
 @interface BugSenseCrashController (Delegation)
 
 - (void) operationCompleted:(BOOL)statusCodeAcceptable withData:(NSData *)data;
+- (void) analyticsOperationCompleted:(BOOL)statusCodeAcceptable forData:(NSData *)data;
 
 @end
 
@@ -126,11 +127,13 @@
             completion:^(NSURLRequest *request, NSHTTPURLResponse *response, NSData *data, NSError *error) {
                 NSLog(kServerRespondedMsg, response.statusCode);
                 if (error) {
-                    NSLog(kErrorMsg, error);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [delegate analyticsOperationCompleted:NO forData:analyticsData];
+                    });
                 } else {
                     BOOL statusCodeAcceptable = [[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(200, 100)] containsIndex:[response statusCode]];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [delegate operationCompleted:statusCodeAcceptable withData:nil];
+                        [delegate analyticsOperationCompleted:statusCodeAcceptable forData:analyticsData];
                     });
                 }
         }];
