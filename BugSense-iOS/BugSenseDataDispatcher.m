@@ -72,7 +72,7 @@
         NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
         NSURL *bugsenseURL = nil;
         
-        BOOL isEnterprise = NO;
+        BOOL isEnterprise = YES;
         
         if (isEnterprise) {
             bugsenseURL = [NSURL URLWithString:[[BugSenseCrashController endpointURL] stringByAppendingPathComponent:BUGSENSE_ENTERPRISE_REPORTING_PATH]];
