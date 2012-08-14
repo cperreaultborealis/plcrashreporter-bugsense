@@ -127,8 +127,6 @@ static NSString                 *_endpointURL;
     return _crashReporter;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 - (PLCrashReport *) crashReport {
     if (!_crashReport) {
         NSError *error = nil;
@@ -160,8 +158,6 @@ static NSString                 *_endpointURL;
     }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 - (dispatch_queue_t) operationsQueue {
     if (!_operationsQueue) {
         _operationsQueue = dispatch_queue_create("com.bugsense.operations", NULL);
@@ -172,6 +168,13 @@ static NSString                 *_endpointURL;
 
 - (NSString *)analyticsSessionInfo {
     return _analyticsSessionInfo;
+}
+
++ (NSString *)endpointURL {
+    if (_endpointURL)
+        return  _endpointURL;
+    else 
+        return @"";
 }
 
 + (NSString *)apiKey {
