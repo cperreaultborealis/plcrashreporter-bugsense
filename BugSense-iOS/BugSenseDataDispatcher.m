@@ -42,6 +42,9 @@
 
 #define BUGSENSE_ANALYTICS_SERVICE_URL  @"http://ticks.bugsense.com/put/%@"
 
+#define BUGSENSE_ENTERPRISE_REPORTING_PATH      @"/api/errors"
+#define BUGSENSE_ENTERPRISE_ANALYTICS_PATH      @"/api/ticks"
+
 #define kNoJSONGivenErrorMsg            @"BugSense --> No JSON data was given to post!"
 #define kServerRespondedMsg             @"BugSense --> Server responded with status code: %i"
 #define kErrorMsg                       @"BugSense --> Error: %@"
@@ -67,8 +70,18 @@
         
         NSString *reqSysVer = @"4.0";
         NSString *currSysVer = [[UIDevice currentDevice] systemVersion];
-        NSURL *bugsenseURL = ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) ? [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_SECURE_URL] : [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_URL];
-                
+        NSURL *bugsenseURL = nil;
+        
+        BOOL isEnterprise = NO;
+        
+        if (isEnterprise) {
+            bugsenseURL = [NSURL URLWithString:[[BugSenseCrashController endpointURL] stringByAppendingPathComponent:BUGSENSE_ENTERPRISE_REPORTING_PATH]];
+        }
+        
+        if (!bugsenseURL) {
+            bugsenseURL = ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending) ? [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_SECURE_URL] : [NSURL URLWithString:BUGSENSE_REPORTING_SERVICE_URL];
+        }
+        
         NSMutableURLRequest *bugsenseRequest = [[[NSMutableURLRequest alloc] initWithURL:bugsenseURL 
             cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f] autorelease];
         [bugsenseRequest setHTTPMethod:@"POST"];
@@ -112,7 +125,18 @@
         NSLog(kNoAnalyticsGivenErrorMsg);
         return NO;
     } else {
-        NSURL *bugsenseURL = [NSURL URLWithString:[NSString stringWithFormat:BUGSENSE_ANALYTICS_SERVICE_URL, key]];
+        NSURL *bugsenseURL = nil;
+        
+        BOOL isEnterprise = YES;
+        
+        if (isEnterprise) {
+            bugsenseURL = [NSURL URLWithString:[[BugSenseCrashController endpointURL] stringByAppendingPathComponent:BUGSENSE_ENTERPRISE_ANALYTICS_PATH]];
+        }
+        
+        if (!bugsenseURL) {
+            bugsenseURL = [NSURL URLWithString:[NSString stringWithFormat:BUGSENSE_ANALYTICS_SERVICE_URL, key]];
+        }
+        
         NSMutableURLRequest *bugsenseRequest = [[[NSMutableURLRequest alloc] initWithURL:bugsenseURL 
                                                                              cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0f] autorelease];
         [bugsenseRequest setHTTPMethod:@"POST"];

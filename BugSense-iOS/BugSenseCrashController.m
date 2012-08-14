@@ -116,6 +116,7 @@ static BugSenseCrashController  *_sharedCrashController = nil;
 static NSDictionary             *_userDictionary;
 static NSString                 *_APIKey;
 static BOOL                     _immediately;
+static NSString                 *_endpointURL;
 
 #pragma mark - Ivar accessors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,13 +327,14 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 #ifndef __clang_analyzer__
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
-                                                userDictionary:(NSDictionary *)userDictionary 
+                                                userDictionary:(NSDictionary *)userDictionary
+                                                   endpointURL:(NSString *)endpointURL
                                           analyticsSessionInfo:(NSString *)analyticsSessionInfo 
                                                sendImmediately:(BOOL)immediately {
     static dispatch_once_t oncePredicate;
     dispatch_once(&oncePredicate, ^{
         if (!_sharedCrashController) {
-            [[self alloc] initWithAPIKey:APIKey userDictionary:userDictionary analyticsSessionInfo:analyticsSessionInfo sendImmediately:immediately];
+            [[self alloc] initWithAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo sendImmediately:immediately];
             [_sharedCrashController initiateReporting];
             [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
         }
@@ -344,23 +346,27 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
                                                 userDictionary:(NSDictionary *)userDictionary
+                                                   endpointURL:(NSString *)endpointURL
                                           analyticsSessionInfo:(NSString *)analyticsSessionInfo {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:userDictionary analyticsSessionInfo:analyticsSessionInfo sendImmediately:NO];
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo sendImmediately:NO];
 }
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
+                                                   endpointURL:(NSString *)endpointURL
                                           analyticsSessionInfo:(NSString *)analyticsSessionInfo {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:nil analyticsSessionInfo:analyticsSessionInfo];
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:nil endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo];
 }
 
-+ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey analyticsSessionInfo:nil];
++ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey
+                                                   endpointURL:(NSString *)endpointURL {
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey endpointURL:endpointURL analyticsSessionInfo:nil];
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id) initWithAPIKey:(NSString *)bugSenseAPIKey 
        userDictionary:(NSDictionary *)userDictionary 
+          endpointURL:(NSString *)endpointURL
  analyticsSessionInfo:(NSString *)analyticsSessionInfo 
       sendImmediately:(BOOL)immediately {
     if ((self = [super init])) {
@@ -374,6 +380,10 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
             _userDictionary = [userDictionary retain];
         } else {
             _userDictionary = nil;
+        }
+        
+        if (endpointURL) {
+            _endpointURL = [endpointURL retain];
         }
         
         if (analyticsSessionInfo) {
