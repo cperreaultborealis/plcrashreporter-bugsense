@@ -34,6 +34,6 @@
 
 @interface BugSenseAnalyticsGenerator : NSObject
 
-+ (NSData *)analyticsDataWithTag:(NSString *)tag andExtraData:(NSString *)extraData;
++ (NSData *)analyticsDataWithTag:(NSString *)tag;
 
 @end

@@ -33,17 +33,17 @@
 
 #import "BSAFHTTPRequestOperation.h"
 #import "BugSenseCrashController.h"
-
+#import "BSOpenUDID.h"
 #import "BugSenseDataDispatcher.h"
 
 #define BUGSENSE_REPORTING_SERVICE_URL          @"http://www.bugsense.com/api/errors"
 #define BUGSENSE_REPORTING_SERVICE_SECURE_URL   @"https://www.bugsense.com/api/errors"
 #define BUGSENSE_HEADER                         @"X-BugSense-Api-Key"
 
-#define BUGSENSE_ANALYTICS_SERVICE_URL  @"http://ticks.bugsense.com/put/%@"
+#define BUGSENSE_ANALYTICS_SERVICE_URL  @"http://ticks.bugsense.com/stream/%@/%@"
 
 #define BUGSENSE_ENTERPRISE_REPORTING_PATH      @"/api/errors"
-#define BUGSENSE_ENTERPRISE_ANALYTICS_PATH      @"/api/ticks"
+#define BUGSENSE_ENTERPRISE_ANALYTICS_PATH      @"/api/ticks/%@/%@"
 
 #define kNoJSONGivenErrorMsg            @"BugSense --> No JSON data was given to post!"
 #define kServerRespondedMsg             @"BugSense --> Server responded with status code: %i"
@@ -130,11 +130,11 @@
         BOOL isEnterprise = YES;
         
         if (isEnterprise) {
-            bugsenseURL = [NSURL URLWithString:[[BugSenseCrashController endpointURL] stringByAppendingPathComponent:BUGSENSE_ENTERPRISE_ANALYTICS_PATH]];
+            bugsenseURL = [NSURL URLWithString:[[BugSenseCrashController endpointURL] stringByAppendingPathComponent:[NSString stringWithFormat:BUGSENSE_ENTERPRISE_ANALYTICS_PATH, key, [BSOpenUDID value]]]];
         }
         
         if (!bugsenseURL) {
-            bugsenseURL = [NSURL URLWithString:[NSString stringWithFormat:BUGSENSE_ANALYTICS_SERVICE_URL, key]];
+            bugsenseURL = [NSURL URLWithString:[NSString stringWithFormat:BUGSENSE_ANALYTICS_SERVICE_URL, key, [BSOpenUDID value]]];
         }
         
         NSMutableURLRequest *bugsenseRequest = [[[NSMutableURLRequest alloc] initWithURL:bugsenseURL 

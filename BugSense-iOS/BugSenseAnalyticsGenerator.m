@@ -37,19 +37,18 @@
 #define kExcessiveDataLengthStatus @"Data length exceeds analytics API specifications."
 
 #define kBugSenseAnalyticsVersion @"1.0"
-#define kBugSenseAnalyticsMaximumLength 512
+#define kBugSenseAnalyticsMaximumLength 256
 
 @implementation BugSenseAnalyticsGenerator
 
-+ (NSData *)analyticsDataWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
++ (NSData *)analyticsDataWithTag:(NSString *)tag {
     NSString *systemVersion = [NSString stringWithFormat:@"iOS %@", [[UIDevice currentDevice] systemVersion]];
     NSString *platform = [BugSenseJSONGenerator device];
     NSLocale *locale = [NSLocale currentLocale];
     NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     
-    NSString *mainPayloadStr = [NSString stringWithFormat:@"' \"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%.0f\":",
+    NSString *mainPayloadStr = [NSString stringWithFormat:@"' \"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%@\":\"%.0f\" '",
                                 kBugSenseAnalyticsVersion,
-                                [BSOpenUDID value],
                                 tag,
                                 platform,
                                 systemVersion,
@@ -57,25 +56,7 @@
                                 [locale localeIdentifier],
                                 [[NSDate date] timeIntervalSince1970]];
     
-    NSData *mainPayloadData = [mainPayloadStr dataUsingEncoding:NSASCIIStringEncoding];
-    NSUInteger mainPayloadLength = [mainPayloadData length];
-    NSInteger extraDataMaxLength = kBugSenseAnalyticsMaximumLength - mainPayloadLength - 4;
-    
-    if (extraDataMaxLength < 0) {
-        NSLog(kExcessiveDataLengthStatus);
-        return nil;
-    }
-    
-    NSString *payloadStr;
-    
-    if (extraDataMaxLength > [[extraData dataUsingEncoding:NSASCIIStringEncoding] length]) {
-        payloadStr = [NSString stringWithFormat:@"%@\"%@\" '", mainPayloadStr, extraData];
-    } else {
-        extraDataMaxLength -= 3;
-        payloadStr = [NSString stringWithFormat:@"%@\"%@...\" '", mainPayloadStr, [extraData substringToIndex:extraDataMaxLength]];
-    }
-    
-    NSData *payloadData = [payloadStr dataUsingEncoding:NSASCIIStringEncoding];
+    NSData *payloadData = [mainPayloadStr dataUsingEncoding:NSASCIIStringEncoding];
     
     return payloadData;
 }

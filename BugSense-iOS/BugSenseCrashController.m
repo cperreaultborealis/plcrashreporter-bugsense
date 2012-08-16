@@ -84,7 +84,6 @@ experienced. Do you want to get it from the App Store?", nil)
 
 - (PLCrashReporter *) crashReporter;
 - (PLCrashReport *) crashReport;
-- (NSString *) analyticsSessionInfo;
 - (NSString *) currentIPAddress;
 - (NSString *) device;
 - (dispatch_queue_t) operationsQueue;
@@ -116,7 +115,6 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
     PLCrashReport       *_crashReport;
     
     unsigned long long  _sessionStartTimestampInMilliseconds;
-    NSString            *_analyticsSessionInfo;
     
     NSURL               *_storeLinkURL;
 }
@@ -180,10 +178,6 @@ static char                     ms_cache_path[512];
 
 - (unsigned long long) sessionStartTimestampInMilliseconds {
     return _sessionStartTimestampInMilliseconds;
-}
-
-- (NSString *)analyticsSessionInfo {
-    return _analyticsSessionInfo;
 }
 
 + (NSString *)endpointURL {
@@ -303,11 +297,10 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 
 static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&time, NULL); return (unsigned long long) time.tv_sec*1000 + time.tv_usec/1000; }
 
-- (void) startInstanceAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
+- (void) startInstanceAnalyticsSession {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
     _sessionStartTimestampInMilliseconds = getMStime();
-    _analyticsSessionInfo = [analyticsSessionInfo retain];
     
     NSLog(@"_sessionStartTimestampInMilliseconds = %llu", _sessionStartTimestampInMilliseconds);
     
@@ -316,13 +309,13 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
         [BugSensePersistence sendAllPendingPings];
         [BugSensePersistence sendAllPendingTicks];
     });
-    [BugSenseCrashController sendEventWithTag:@"_ping" andExtraData:@""];
+    [BugSenseCrashController sendEventWithTag:@"_ping"];
 }
 
-+ (void) startAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
++ (void) startAnalyticsSession {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
+    [_sharedCrashController startInstanceAnalyticsSession];
 }
 
 + (void) stopAnalyticsSession {
@@ -334,7 +327,7 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
     }];
     
     dispatch_async([_sharedCrashController operationsQueue], ^{
-        [BugSenseCrashController sendEventWithTag:@"_gnip" andExtraData:@""];
+        [BugSenseCrashController sendEventWithTag:@"_gnip"];
         [BugSensePersistence sendAllPendingPings];
         [BugSensePersistence sendAllPendingTicks];
         [[UIApplication sharedApplication] endBackgroundTask:bgTask];
@@ -342,11 +335,10 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
     });
 }
 
-+ (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
++ (BOOL) sendEventWithTag:(NSString *)tag {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    NSString *extraDataStr = [NSString stringWithFormat:@"%@:%@", [_sharedCrashController analyticsSessionInfo], extraData];
-    NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag andExtraData:extraDataStr];
+    NSData *analyticsData = [BugSenseAnalyticsGenerator analyticsDataWithTag:tag];
     if (!analyticsData) {
         NSLog(kAnalyticsErrorString);
         return NO;
@@ -372,14 +364,13 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
                                                 userDictionary:(NSDictionary *)userDictionary
                                                    endpointURL:(NSString *)endpointURL
-                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo 
                                                sendImmediately:(BOOL)immediately {
     static dispatch_once_t oncePredicate;
     dispatch_once(&oncePredicate, ^{
         if (!_sharedCrashController) {
-            [[self alloc] initWithAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo sendImmediately:immediately];
+            [[self alloc] initWithAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL sendImmediately:immediately];
             [_sharedCrashController initiateReporting];
-            [_sharedCrashController startInstanceAnalyticsSessionWithInfo:analyticsSessionInfo];
+            [_sharedCrashController startInstanceAnalyticsSession];
         }
     });
     
@@ -389,28 +380,19 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
                                                 userDictionary:(NSDictionary *)userDictionary
-                                                   endpointURL:(NSString *)endpointURL
-                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo sendImmediately:NO];
+                                                   endpointURL:(NSString *)endpointURL {
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:userDictionary endpointURL:endpointURL sendImmediately:NO];
 }
 
 + (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey 
-                                                   endpointURL:(NSString *)endpointURL
-                                          analyticsSessionInfo:(NSString *)analyticsSessionInfo {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:nil endpointURL:endpointURL analyticsSessionInfo:analyticsSessionInfo];
-}
-
-+ (BugSenseCrashController *) sharedInstanceWithBugSenseAPIKey:(NSString *)APIKey
                                                    endpointURL:(NSString *)endpointURL {
-    return [self sharedInstanceWithBugSenseAPIKey:APIKey endpointURL:endpointURL analyticsSessionInfo:nil];
+    return [self sharedInstanceWithBugSenseAPIKey:APIKey userDictionary:nil endpointURL:endpointURL];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id) initWithAPIKey:(NSString *)bugSenseAPIKey 
        userDictionary:(NSDictionary *)userDictionary 
           endpointURL:(NSString *)endpointURL
- analyticsSessionInfo:(NSString *)analyticsSessionInfo 
       sendImmediately:(BOOL)immediately {
     if ((self = [super init])) {
         _operationCompleted = NO;
@@ -427,10 +409,6 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
         
         if (endpointURL) {
             _endpointURL = [endpointURL retain];
-        }
-        
-        if (analyticsSessionInfo) {
-            _analyticsSessionInfo = [analyticsSessionInfo retain];
         }
         
         NSString *logCachePathStr = [[BugSensePersistence bugsenseDirectory] stringByAppendingPathComponent:@"logs.txt"];
