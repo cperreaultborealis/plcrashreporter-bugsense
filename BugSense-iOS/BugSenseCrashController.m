@@ -33,6 +33,7 @@
 
 #include <dlfcn.h>
 #include <execinfo.h>
+#include <sys/time.h>
 
 #import "BugSenseCrashController.h"
 #import "BugSenseSymbolicator.h"
@@ -40,6 +41,7 @@
 #import "BugSenseDataDispatcher.h"
 #import "BugSenseAnalyticsGenerator.h"
 #import "BugSensePersistence.h"
+#import "BugSenseLowLevel.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -58,6 +60,7 @@
 #define kCrashReporterErrorString       @"BugSense --> Error: Could not enable crash reporting due to: %@"
 #define kAnalyticsErrorString           @"BugSense --> Could not prepare analytics string."
 #define kNewVersionAlertMsgString       @"BugSense --> New version alert shown."
+#define kAdditionalInfoStored           @"BugSense --> Additional crash info have been saved."
 
 #define kStandardUpdateTitle            NSLocalizedString(@"Update available", nil)
 #define kStandardUpdateAlertFormat      NSLocalizedString(@"There is an update for %@, that fixes the crash you've just\
@@ -71,6 +74,10 @@ experienced. Do you want to get it from the App Store?", nil)
 #define kContentTextKey                 @"contentText"
 #define kURLKey                         @"url"
 
+#define LOG_NUM	20
+#define LOG_MAX	100
+#define LOG_LVL	8
+
 #pragma mark - Private interface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 @interface BugSenseCrashController (Private)
@@ -81,6 +88,7 @@ experienced. Do you want to get it from the App Store?", nil)
 - (NSString *) currentIPAddress;
 - (NSString *) device;
 - (dispatch_queue_t) operationsQueue;
+- (unsigned long long) sessionStartTimestampInMilliseconds;
 
 void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
 - (void) performPostCrashOperations;
@@ -107,6 +115,7 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context);
     PLCrashReporter     *_crashReporter;
     PLCrashReport       *_crashReport;
     
+    unsigned long long  _sessionStartTimestampInMilliseconds;
     NSString            *_analyticsSessionInfo;
     
     NSURL               *_storeLinkURL;
@@ -117,6 +126,9 @@ static NSDictionary             *_userDictionary;
 static NSString                 *_APIKey;
 static BOOL                     _immediately;
 static NSString                 *_endpointURL;
+static char                     log_cache_path[512];
+static char                     ms_cache_path[512];
+
 
 #pragma mark - Ivar accessors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +178,10 @@ static NSString                 *_endpointURL;
     return _operationsQueue;
 }
 
+- (unsigned long long) sessionStartTimestampInMilliseconds {
+    return _sessionStartTimestampInMilliseconds;
+}
+
 - (NSString *)analyticsSessionInfo {
     return _analyticsSessionInfo;
 }
@@ -186,6 +202,9 @@ static NSString                 *_endpointURL;
 void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
     [_sharedCrashController performSelectorOnMainThread:@selector(retainSymbolsForReport:) 
                                              withObject:[_sharedCrashController crashReport] 
+                                          waitUntilDone:YES];
+    [_sharedCrashController performSelectorOnMainThread:@selector(retainAdditionalCrashInfo) 
+                                             withObject:nil 
                                           waitUntilDone:YES];
     [_sharedCrashController performSelectorOnMainThread:@selector(performPostCrashOperations) 
                                              withObject:nil 
@@ -227,11 +246,20 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 
 
-#pragma mark - Logging method
+#pragma mark - Exception logging method
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 + (BOOL) logException:(NSException *)exception withTag:(NSString *)tag {
-    NSData *jsonData = [BugSenseJSONGenerator JSONDataFromException:exception userDictionary:_userDictionary 
-                                                                tag:tag];
+    
+    unsigned long long x = getMStime() - [_sharedCrashController sessionStartTimestampInMilliseconds];
+    NSNumber *msUntilCrashNum = [NSNumber numberWithUnsignedLongLong:x];
+    
+    NSDictionary *additionalInfo = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:msUntilCrashNum, nil] 
+                                                               forKeys:[NSArray arrayWithObjects:@"ms_from_start", nil]];
+    
+    NSData *jsonData = [BugSenseJSONGenerator JSONDataFromException:exception 
+                                                     userDictionary:_userDictionary 
+                                                                tag:tag 
+                                                     additionalInfo:additionalInfo];
     if (!jsonData) {
         NSLog(kJSONErrorString);
         return NO;
@@ -273,14 +301,20 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 
 #pragma mark - Analytics methods
 
+static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&time, NULL); return (unsigned long long) time.tv_sec*1000 + time.tv_usec/1000; }
+
 - (void) startInstanceAnalyticsSessionWithInfo:(NSString *)analyticsSessionInfo {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
+    _sessionStartTimestampInMilliseconds = getMStime();
     _analyticsSessionInfo = [analyticsSessionInfo retain];
+    
+    NSLog(@"_sessionStartTimestampInMilliseconds = %llu", _sessionStartTimestampInMilliseconds);
     
     dispatch_async([self operationsQueue], ^{
         [BugSensePersistence createDirectoryStructure];
         [BugSensePersistence sendAllPendingPings];
+        [BugSensePersistence sendAllPendingTicks];
     });
     [BugSenseCrashController sendEventWithTag:@"_ping" andExtraData:@""];
 }
@@ -294,11 +328,18 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
 + (void) stopAnalyticsSession {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    dispatch_async([_sharedCrashController operationsQueue], ^{
-        [BugSensePersistence sendAllPendingPings];
-    });
+    __block UIBackgroundTaskIdentifier bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
     
-    [BugSenseCrashController sendEventWithTag:@"_gnip" andExtraData:@""];
+    dispatch_async([_sharedCrashController operationsQueue], ^{
+        [BugSenseCrashController sendEventWithTag:@"_gnip" andExtraData:@""];
+        [BugSensePersistence sendAllPendingPings];
+        [BugSensePersistence sendAllPendingTicks];
+        [[UIApplication sharedApplication] endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    });
 }
 
 + (BOOL) sendEventWithTag:(NSString *)tag andExtraData:(NSString *)extraData {
@@ -317,9 +358,8 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
             [BugSensePersistence sendOrQueuePing:analyticsData];
         });
     } else {
-        // TODO: cache it
         dispatch_async([_sharedCrashController operationsQueue], ^{
-            [BugSenseDataDispatcher postAnalyticsData:analyticsData withAPIKey:_APIKey delegate:nil];
+            [BugSensePersistence sendOrQueueTick:analyticsData];
         });
     }
     
@@ -392,6 +432,12 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
         if (analyticsSessionInfo) {
             _analyticsSessionInfo = [analyticsSessionInfo retain];
         }
+        
+        NSString *logCachePathStr = [[BugSensePersistence bugsenseDirectory] stringByAppendingPathComponent:@"logs.txt"];
+        snprintf(log_cache_path, 512, "%s", [logCachePathStr UTF8String]);
+        
+        NSString *msCachePathStr = [[BugSensePersistence bugsenseDirectory] stringByAppendingPathComponent:@"ms.txt"];
+        snprintf(ms_cache_path, 512, "%s", [msCachePathStr UTF8String]);
         
         _immediately = immediately;
     }
@@ -479,16 +525,59 @@ void post_crash_callback(siginfo_t *info, ucontext_t *uap, void *context) {
     }
 }
 
+- (void) retainAdditionalCrashInfo {
+    // Store time interval from start until crash
+    unsigned long long x = getMStime() - _sessionStartTimestampInMilliseconds;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    int bytes;
+    
+    bytes = write_llu_to_file(x, ms_cache_path);
+    if(bytes != sizeof(unsigned long long))
+        fprintf(stderr, "PANICK!\n");
+    
+    // Store logs
+    int i, j;
+    tag_log_row m[LOG_MAX];
+    
+    memset_async(m, 0x00, LOG_MAX * sizeof(tag_log_row));
+    j = get_system_log_messages(LOG_LVL, NULL, LOG_NUM, m);
+    printf("%d\n", j);
+    for (i = 0; i < j; i++)
+        printf("%d |%s|\n", i, m[i]);
+    write_to_log_file(m, log_cache_path, j);
+    
+    NSLog(kAdditionalInfoStored);
+}
+
 - (void) processCrashReport:(PLCrashReport *)report  {
     NSLog(kProcessingMsgString);
     
-    NSLog(kCrashMsgString, report.systemInfo.timestamp, report.signalInfo.name, report.signalInfo.code, 
-          report.signalInfo.address);
+    NSLog(kCrashMsgString, report.systemInfo.timestamp, report.signalInfo.name, report.signalInfo.code, report.signalInfo.address);
+    
+    unsigned long long x;
+    int bytes;
+    bytes = read_llu_from_file(&x, ms_cache_path);
+    if(bytes != sizeof(unsigned long long))
+        fprintf(stderr, "PANICK!\n");
+    
+    NSNumber *msUntilCrashNum = [NSNumber numberWithUnsignedLongLong:x];
+    
+    int i, j;
+    tag_log_row m[LOG_MAX];
+    
+    memset_async(m, 0x00, LOG_MAX * sizeof(tag_log_row));
+    read_from_log_file(m, log_cache_path, &j);
+    
+    NSMutableArray *log = [NSMutableArray arrayWithCapacity:j];
+    
+    for (i = 0; i < j; i++)
+        [log addObject:[NSString stringWithFormat:@"%s", m[i]]];
+    
+    NSDictionary *additionalInfo = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:msUntilCrashNum, log, nil] 
+                                                               forKeys:[NSArray arrayWithObjects:@"ms_from_start", @"log", nil]];
     
     // Preparing the JSON string
-    NSData *jsonData = [BugSenseJSONGenerator JSONDataFromCrashReport:report userDictionary:_userDictionary];
+    NSData *jsonData = [BugSenseJSONGenerator JSONDataFromCrashReport:report userDictionary:_userDictionary additionalInfo:additionalInfo];
     if (!jsonData) {
         NSLog(kJSONErrorString);
         return;

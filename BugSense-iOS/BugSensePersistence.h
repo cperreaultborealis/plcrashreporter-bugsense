@@ -35,6 +35,7 @@
 @interface BugSensePersistence : NSObject
 
 + (void)createDirectoryStructure;
++ (NSString *)bugsenseDirectory;
 
 + (BOOL)sendOrQueuePing:(NSData *)ping;
 + (BOOL)sendAllPendingPings;

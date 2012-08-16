@@ -375,9 +375,8 @@
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (NSData *) JSONDataFromCrashReport:(PLCrashReport *)report userDictionary:(NSDictionary *)userDictionary {
++ (NSData *) JSONDataFromCrashReport:(PLCrashReport *)report userDictionary:(NSDictionary *)userDictionary additionalInfo:(NSDictionary *)info {
     if (!report) {
         return nil;
     }
@@ -591,10 +590,7 @@
         NSMutableDictionary *request = [[[NSMutableDictionary alloc] init] autorelease];
         
         // ----remote_ip
-        [request setObject:[self IPAddress] forKey:@"remote_ip"];
-        if (userDictionary) {
-            [request setObject:userDictionary forKey:@"custom_data"];
-        }
+        //[request setObject:[self IPAddress] forKey:@"remote_ip"];
         
         NSLog(kGeneratingProcessMsg, 9);
         
@@ -647,6 +643,16 @@
         // --budid
         [application_environment setObject:[BSOpenUDID value] forKey:@"budid"];
         
+        NSMutableDictionary *customData = [[[NSMutableDictionary alloc] init] autorelease];
+        [customData setObject:[info objectForKey:@"ms_from_start"] forKey:@"ms_from_start"];
+        [customData setObject:[[info objectForKey:@"log"] componentsJoinedByString:@"\n"] forKey:@"log"];
+        if (userDictionary) {
+            for (NSString *key in [userDictionary allKeys]) {
+                [customData setObject:[userDictionary objectForKey:key] forKey:key];
+            }
+        }
+        [application_environment setObject:customData forKey:@"log_data"];
+        
         NSLog(kGeneratingProcessMsg, 13);
         
         // root
@@ -670,8 +676,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+ (NSData *) JSONDataFromException:(NSException *)exception userDictionary:(NSDictionary *)userDictionary 
-                               tag:(NSString *)tag {
++ (NSData *) JSONDataFromException:(NSException *)exception userDictionary:(NSDictionary *)userDictionary tag:(NSString *)tag additionalInfo:(NSDictionary *)info {
     if (!exception) {
         return nil;
     }
@@ -758,7 +763,7 @@
             [exceptionDict setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
         
-        [exception setObject:@"exception" forKey:@"rtype"];
+        [exceptionDict setObject:@"exception" forKey:@"rtype"];
         
         if (stacktrace.count > 0) {
             [exceptionDict setObject:stacktrace forKey:@"backtrace"];
@@ -776,11 +781,7 @@
         NSMutableDictionary *request = [[[NSMutableDictionary alloc] init] autorelease];
         
         // ----remote_ip
-        [request setObject:[self IPAddress] forKey:@"remote_ip"];
-        if (userDictionary) {
-            [request setObject:userDictionary forKey:@"custom_data"];
-            [request setObject:[NSString stringWithFormat:@"log-%@",tag] forKey:@"tag"];
-        }
+        //[request setObject:[self IPAddress] forKey:@"remote_ip"];
         
         NSLog(kGeneratingProcessExceptionMsg, 4);
         
@@ -791,6 +792,15 @@
         [application_environment setObject:[BSOpenUDID value] forKey:@"budid"];
         
         NSLog(kGeneratingProcessExceptionMsg, 5);
+        
+        NSMutableDictionary *customData = [[[NSMutableDictionary alloc] init] autorelease];
+        [customData setObject:[info objectForKey:@"ms_from_start"] forKey:@"ms_from_start"];
+        if (userDictionary) {
+            for (NSString *key in [userDictionary allKeys]) {
+                [customData setObject:[userDictionary objectForKey:key] forKey:key];
+            }
+        }
+        [application_environment setObject:customData forKey:@"log_data"];
         
         // root
         NSMutableDictionary *rootDictionary = [[[NSMutableDictionary alloc] init] autorelease];
