@@ -351,7 +351,7 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
         });
     } else {
         dispatch_async([_sharedCrashController operationsQueue], ^{
-            [BugSensePersistence sendOrQueueTick:analyticsData];
+            [BugSensePersistence queueTick:analyticsData];
         });
     }
     
@@ -652,7 +652,7 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
             if ([tag isEqualToString:@"_ping"] || [tag isEqualToString:@"_gnip"]) {
                 [BugSensePersistence queuePing:data];
             } else {
-                
+                [BugSensePersistence queueTick:data];
             }
             
         });
