@@ -37,7 +37,8 @@
 
 @implementation BugSensePersistence
 
-#define kBugSenseAnalyticsMaximumMessages   1000
+#define kBugSenseAnalyticsMaximumMessages       1000
+#define kBugSenseAnalyticsMaximumCrashReports   100
 
 #define kBugSensePersistenceDir                 @"com.bugsense.persistence"
 #define kBugSensePingsStoreFilename             @"pings.plist"
@@ -103,7 +104,16 @@
 + (BOOL)writePingsToFile:(NSArray *)pings {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    BOOL success = [pings writeToFile:[self pendingPingsStorePath] atomically:YES];
+    NSArray *finalArr;
+    
+    if ([pings count] > kBugSenseAnalyticsMaximumMessages) {
+        NSUInteger startIndex = [pings count] - kBugSenseAnalyticsMaximumMessages;
+        finalArr = [pings subarrayWithRange:NSMakeRange(startIndex, kBugSenseAnalyticsMaximumMessages)];
+    } else {
+        finalArr = [pings retain];
+    }
+    
+    BOOL success = [finalArr writeToFile:[self pendingPingsStorePath] atomically:YES];
     
     if (!success)
         NSLog(@"");
@@ -176,7 +186,16 @@
 + (BOOL)writeTicksToFile:(NSArray *)ticks {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    BOOL success = [ticks writeToFile:[self pendingTicksStorePath] atomically:YES];
+    NSArray *finalArr;
+    
+    if ([ticks count] > kBugSenseAnalyticsMaximumMessages) {
+        NSUInteger startIndex = [ticks count] - kBugSenseAnalyticsMaximumMessages;
+        finalArr = [ticks subarrayWithRange:NSMakeRange(startIndex, kBugSenseAnalyticsMaximumMessages)];
+    } else {
+        finalArr = [ticks retain];
+    }
+    
+    BOOL success = [finalArr writeToFile:[self pendingTicksStorePath] atomically:YES];
     
     if (!success)
         NSLog(@"");
@@ -248,6 +267,15 @@
 
 + (BOOL)writeCrashReportsToFile:(NSArray *)reports {
     NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    NSArray *finalArr;
+    
+    if ([reports count] > kBugSenseAnalyticsMaximumCrashReports) {
+        NSUInteger startIndex = [reports count] - kBugSenseAnalyticsMaximumCrashReports;
+        finalArr = [reports subarrayWithRange:NSMakeRange(startIndex, kBugSenseAnalyticsMaximumCrashReports)];
+    } else {
+        finalArr = [reports retain];
+    }
     
     BOOL success = [reports writeToFile:[self pendingCrashReportsStorePath] atomically:YES];
     
