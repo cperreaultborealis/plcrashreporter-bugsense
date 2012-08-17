@@ -277,7 +277,7 @@
         finalArr = [reports retain];
     }
     
-    BOOL success = [reports writeToFile:[self pendingCrashReportsStorePath] atomically:YES];
+    BOOL success = [finalArr writeToFile:[self pendingCrashReportsStorePath] atomically:YES];
     
     if (!success)
         NSLog(@"");
