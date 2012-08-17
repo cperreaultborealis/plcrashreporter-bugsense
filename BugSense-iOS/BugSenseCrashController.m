@@ -308,6 +308,7 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
         [BugSensePersistence createDirectoryStructure];
         [BugSensePersistence sendAllPendingPings];
         [BugSensePersistence sendAllPendingTicks];
+        [BugSensePersistence sendAllPendingCrashReports];
     });
     [BugSenseCrashController sendEventWithTag:@"_ping"];
 }
@@ -563,6 +564,7 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
     
     // Send the JSON string to the BugSense servers
     [BugSenseDataDispatcher postJSONData:jsonData withAPIKey:_APIKey delegate:self showFeedback:YES];
+//    [BugSensePersistence sendOrQueueCrashReport:jsonData];
 }
 
 @end
@@ -624,17 +626,23 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
 }
 
 #pragma mark - Delegate method (in category)
-- (void) operationCompleted:(BOOL)statusCodeAcceptable withData:(NSData *)data {
+- (void) operationCompleted:(BOOL)statusCodeAcceptable withData:(NSData *)receivedData forData:(NSData *)sentData {
     if (statusCodeAcceptable) {
         [[self crashReporter] purgePendingCrashReport];
         [BugSenseSymbolicator clearSymbols];
         
-        if (data) {
-            [self showNewVersionAlertViewWithData:data];
+        if (receivedData) {
+            [self showNewVersionAlertViewWithData:receivedData];
         } else {
             _operationCompleted = YES;
         }
     } else {
+        NSLog(@"JSON dispatch failed");
+        dispatch_async([_sharedCrashController operationsQueue], ^{
+            [BugSensePersistence queueCrashReport:sentData];
+        });
+        [[self crashReporter] purgePendingCrashReport];
+        [BugSenseSymbolicator clearSymbols];
         _operationCompleted = YES;
     }
 }

@@ -42,6 +42,7 @@
 #define kBugSensePersistenceDir                 @"com.bugsense.persistence"
 #define kBugSensePingsStoreFilename             @"pings.plist"
 #define kBugSenseTicksStoreFilename             @"ticks.plist"
+#define kBugSenseCrashesStoreFilename           @"crashes.plist"
 
 + (NSString *)bugsenseDirectory {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);    
@@ -75,6 +76,12 @@
     NSLog(@"%s", __PRETTY_FUNCTION__);
     return [[self bugsenseDirectory] stringByAppendingPathComponent:kBugSenseTicksStoreFilename];
 }
+
++ (NSString *)pendingCrashReportsStorePath {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    return [[self bugsenseDirectory] stringByAppendingPathComponent:kBugSenseCrashesStoreFilename];
+}
+
 
 #pragma mark - Pings
 + (BOOL)sendOrQueuePing:(NSData *)ping {
@@ -116,7 +123,7 @@
     NSMutableArray *pings = [NSMutableArray arrayWithArray:[self pendingPings]];
     [pings addObject:ping];
     
-    NSLog(@"pings: %d", [pings count]);
+    NSLog(@"%s pings: %d", __PRETTY_FUNCTION__, [pings count]);
     
     return [self writePingsToFile:pings];
 }
@@ -156,10 +163,10 @@
     BSReachability *reach = [BSReachability reachabilityForInternetConnection];
     NetworkStatus status = [reach currentReachabilityStatus];
     if (status == NotReachable) {
-        return [self queuePing:tick];
+        return [self queueTick:tick];
     } else {
         if (![BugSenseDataDispatcher postAnalyticsData:tick withAPIKey:[BugSenseCrashController apiKey] delegate:nil]) {
-            return [self queuePing:tick];
+            return [self queueTick:tick];
         } else {
             return YES;
         }
@@ -180,7 +187,7 @@
 + (NSArray *)pendingTicks {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    return [NSArray arrayWithContentsOfFile:[self pendingPingsStorePath]];
+    return [NSArray arrayWithContentsOfFile:[self pendingTicksStorePath]];
 }
 
 + (BOOL)queueTick:(NSData *)tick {
@@ -189,7 +196,7 @@
     NSMutableArray *ticks = [NSMutableArray arrayWithArray:[self pendingTicks]];
     [ticks addObject:tick];
     
-    NSLog(@"pings: %d", [ticks count]);
+    NSLog(@"%s ticks: %d", __PRETTY_FUNCTION__, [ticks count]);
     
     return [self writeTicksToFile:ticks];
 }
@@ -220,6 +227,79 @@
     [ticks removeObjectsInArray:sentTicks];
     
     return [self writeTicksToFile:ticks];
+}
+
+#pragma mark - Crash Reports
++ (BOOL)sendOrQueueCrashReport:(NSData *)report {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    BSReachability *reach = [BSReachability reachabilityForInternetConnection];
+    NetworkStatus status = [reach currentReachabilityStatus];
+    if (status == NotReachable) {
+        return [self queueCrashReport:report];
+    } else {
+        if (![BugSenseDataDispatcher postJSONData:report withAPIKey:[BugSenseCrashController apiKey] delegate:nil showFeedback:YES]) {
+            return [self queueCrashReport:report];
+        } else {
+            return YES;
+        }
+    }
+}
+
++ (BOOL)writeCrashReportsToFile:(NSArray *)reports {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    BOOL success = [reports writeToFile:[self pendingCrashReportsStorePath] atomically:YES];
+    
+    if (!success)
+        NSLog(@"");
+    
+    return success;
+}
+
++ (NSArray *)pendingCrashReports {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    return [NSArray arrayWithContentsOfFile:[self pendingCrashReportsStorePath]];
+}
+
++ (BOOL)queueCrashReport:(NSData *)jsonData {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    NSMutableArray *crashReports = [NSMutableArray arrayWithArray:[self pendingCrashReports]];
+    [crashReports addObject:jsonData];
+    
+    NSLog(@"%s crashReports: %d", __PRETTY_FUNCTION__, [crashReports count]);
+    
+    return [self writeCrashReportsToFile:crashReports];
+}
+
++ (BOOL)sendAllPendingCrashReports {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    NSMutableArray *crashReports = [NSMutableArray arrayWithArray:[self pendingCrashReports]];
+    NSLog(@"%s pendingCrashReports count: %d", __PRETTY_FUNCTION__, [[self pendingCrashReports] count]);
+    
+    NSMutableArray *sentCrashReports = [NSMutableArray array];
+    
+    BSReachability *reach = [BSReachability reachabilityForInternetConnection];
+    NetworkStatus status = [reach currentReachabilityStatus];
+    if (status == NotReachable) {
+        NSLog(@"%@", @"not reachable");
+    } else {
+        for (NSData *report in [self pendingCrashReports]) {
+            if ([BugSenseDataDispatcher postJSONData:report withAPIKey:[BugSenseCrashController apiKey] delegate:nil showFeedback:NO]) {
+                NSLog(@"%@", @"postAnalytics true");
+                [sentCrashReports addObject:report];
+            }
+        }
+    }
+    
+    NSLog(@"%s sentCrashReports count: %d", __PRETTY_FUNCTION__, [sentCrashReports count]);
+    
+    [crashReports removeObjectsInArray:sentCrashReports];
+    
+    return [self writeCrashReportsToFile:crashReports];
 }
 
 @end

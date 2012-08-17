@@ -55,8 +55,8 @@
 
 @interface BugSenseCrashController (Delegation)
 
-- (void) operationCompleted:(BOOL)statusCodeAcceptable withData:(NSData *)data;
-- (void) analyticsOperationCompleted:(BOOL)statusCodeAcceptable forData:(NSData *)data;
+- (void) operationCompleted:(BOOL)statusCodeAcceptable withData:(NSData *)receivedData forData:(NSData *)sentData;
+- (void) analyticsOperationCompleted:(BOOL)statusCodeAcceptable forData:(NSData *)sentData;
 
 @end
 
@@ -98,15 +98,15 @@
                 NSLog(kServerRespondedMsg, response.statusCode);
                 if (error) {
                     NSLog(kErrorMsg, error);
-                    [delegate operationCompleted:NO withData:nil];
+                    [delegate operationCompleted:NO withData:nil forData:jsonData];
                 } else {
                     BOOL statusCodeAcceptable = [[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(200, 100)] 
                                                                           containsIndex:[response statusCode]];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if (feedbackOption) {
-                            [delegate operationCompleted:statusCodeAcceptable withData:data];
+                            [delegate operationCompleted:statusCodeAcceptable withData:data forData:jsonData];
                         } else {
-                            [delegate operationCompleted:statusCodeAcceptable withData:nil];
+                            [delegate operationCompleted:statusCodeAcceptable withData:nil forData:jsonData];
                         }
                     });
                 }

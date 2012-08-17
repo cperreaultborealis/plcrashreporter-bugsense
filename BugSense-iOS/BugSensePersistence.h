@@ -47,4 +47,9 @@
 + (NSArray *)pendingTicks;
 + (BOOL)queueTick:(NSData *)tick;
 
++ (BOOL)sendOrQueueCrashReport:(NSData *)report;
++ (BOOL)sendAllPendingCrashReports;
++ (NSArray *)pendingCrashReports;
++ (BOOL)queueCrashReport:(NSData *)report;
+
 @end
