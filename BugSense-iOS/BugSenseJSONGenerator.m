@@ -387,11 +387,16 @@
         // --application_environment
         NSMutableDictionary *application_environment = [[[NSMutableDictionary alloc] init] autorelease];
         
+        NSMutableDictionary *client = [NSMutableDictionary dictionaryWithCapacity:2];
+        
         // ----bugsense_version
-        [application_environment setObject:[self frameworkVersion] forKey:@"version"];
+        [client setObject:[self frameworkVersion] forKey:@"version"];
         
         // ----bugsense_name
-        [application_environment setObject:[self frameworkPlatform] forKey:@"name"];
+        [client setObject:[self frameworkPlatform] forKey:@"name"];
+        
+        // ----bugsense_client
+        [application_environment setObject:client forKey:@"client"];
         
         // ----appname
         [application_environment setObject:[self applicationNameForReport:report] forKey:@"appname"];
@@ -445,15 +450,12 @@
         // ----phone
         [application_environment setObject:[self device] forKey:@"phone"];
         
-        // ----timestamp
-        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-        [formatter setDateFormat:@"YYYY-MM-dd HH:mm:ss zzzzz"];
-        [application_environment setObject:[formatter stringFromDate:report.systemInfo.timestamp] 
-                                    forKey:@"timestamp"];
-        [formatter release];
-        
         // --exception
         NSMutableDictionary *exception = [[[NSMutableDictionary alloc] init] autorelease];
+        
+        // ----occurred_at
+        [exception setObject:[NSNumber numberWithDouble:[report.systemInfo.timestamp timeIntervalSince1970]]
+                      forKey:@"occurred_at"];
         
         // ----backtrace, where
         PLCrashReportThreadInfo *crashedThreadInfo = nil;
@@ -563,7 +565,7 @@
             [exception setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
         
-        [exception setObject:@"crash" forKey:@"rtype"];
+        [exception setObject:[NSNumber numberWithBool:NO] forKey:@"handled"];
 
         NSLog(kGeneratingProcessMsg, 6);
         
@@ -640,8 +642,8 @@
         
         NSLog(kGeneratingProcessMsg, 12);
         
-        // --budid
-        [application_environment setObject:[BSOpenUDID value] forKey:@"budid"];
+        // --uid
+        [application_environment setObject:[BSOpenUDID value] forKey:@"uid"];
         
         NSMutableDictionary *customData = [[[NSMutableDictionary alloc] init] autorelease];
         [customData setObject:[info objectForKey:@"ms_from_start"] forKey:@"ms_from_start"];
@@ -687,11 +689,16 @@
         // --application_environment
         NSMutableDictionary *application_environment = [[[NSMutableDictionary alloc] init] autorelease];
         
+        NSMutableDictionary *client = [NSMutableDictionary dictionaryWithCapacity:2];
+        
         // ----bugsense_version
-        [application_environment setObject:[self frameworkVersion] forKey:@"version"];
+        [client setObject:[self frameworkVersion] forKey:@"version"];
         
         // ----bugsense_name
-        [application_environment setObject:[self frameworkPlatform] forKey:@"name"];
+        [client setObject:[self frameworkPlatform] forKey:@"name"];
+        
+        // ----bugsense_client
+        [application_environment setObject:client forKey:@"client"];
         
         // ----appname
         [application_environment setObject:[self applicationName] forKey:@"appname"];
@@ -745,16 +752,12 @@
         // ----phone
         [application_environment setObject:[self device] forKey:@"phone"];
         
-        // ----timestamp
-        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-        [formatter setDateFormat:@"YYYY-MM-dd HH:mm:ss zzzzz"];
-        [application_environment setObject:[formatter stringFromDate:[NSDate date]] 
-                                    forKey:@"timestamp"];
-        [formatter release];
-        
-        
         // --exception
         NSMutableDictionary *exceptionDict = [[[NSMutableDictionary alloc] init] autorelease];
+        
+        // ----occurred_at
+        [exceptionDict setObject:[NSNumber numberWithDouble:[[NSDate date] timeIntervalSince1970]]
+                          forKey:@"occurred_at"];
         
         // ----backtrace, where        
         NSArray *stacktrace = [exception callStackSymbols];
@@ -763,7 +766,8 @@
             [exceptionDict setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
         
-        [exceptionDict setObject:@"exception" forKey:@"rtype"];
+        // ----handled
+        [exceptionDict setObject:[NSNumber numberWithBool:YES] forKey:@"handled"];
         
         if (stacktrace.count > 0) {
             [exceptionDict setObject:stacktrace forKey:@"backtrace"];
@@ -788,8 +792,8 @@
         // --execname
         [application_environment setObject:[self executableName] forKey:@"execname"];
         
-        // --budid
-        [application_environment setObject:[BSOpenUDID value] forKey:@"budid"];
+        // --uid
+        [application_environment setObject:[BSOpenUDID value] forKey:@"uid"];
         
         NSLog(kGeneratingProcessExceptionMsg, 5);
         
