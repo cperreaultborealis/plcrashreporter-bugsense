@@ -410,7 +410,7 @@
         // ----gps_on
         Class locationManagerClass = NSClassFromString(@"CLLocationManager");
         if (locationManagerClass) {
-            [application_environment setObject:[NSNumber numberWithBool:(BOOL)[locationManagerClass locationServicesEnabled]] 
+            [application_environment setObject:[NSNumber numberWithInt:(BOOL)[locationManagerClass locationServicesEnabled]] 
                                         forKey:@"gps_on"];
         }
         
@@ -429,16 +429,16 @@
         NetworkStatus status = [reach currentReachabilityStatus];
         switch (status) {
             case NotReachable:
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"wifi_on"];
                 break;
             case ReachableViaWiFi:
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:YES] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:1] forKey:@"wifi_on"];
                 break;
             case ReachableViaWWAN:
-                [application_environment setObject:[NSNumber numberWithBool:YES] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:1] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"wifi_on"];
                 break;
         }
         
@@ -565,7 +565,7 @@
             [exception setObject:[stacktrace objectAtIndex:0] forKey:@"where"];
         }
         
-        [exception setObject:[NSNumber numberWithBool:NO] forKey:@"handled"];
+        [exception setObject:[NSNumber numberWithInt:0] forKey:@"handled"];
 
         NSLog(kGeneratingProcessMsg, 6);
         
@@ -712,7 +712,7 @@
         // ----gps_on
         Class locationManagerClass = NSClassFromString(@"CLLocationManager");
         if (locationManagerClass) {
-            [application_environment setObject:[NSNumber numberWithBool:(BOOL)[locationManagerClass locationServicesEnabled]] 
+            [application_environment setObject:[NSNumber numberWithInt:(BOOL)[locationManagerClass locationServicesEnabled]] 
                                         forKey:@"gps_on"];
         }
         
@@ -731,16 +731,16 @@
         NetworkStatus status = [reach currentReachabilityStatus];
         switch (status) {
             case NotReachable:
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"wifi_on"];
                 break;
             case ReachableViaWiFi:
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:YES] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:1] forKey:@"wifi_on"];
                 break;
             case ReachableViaWWAN:
-                [application_environment setObject:[NSNumber numberWithBool:YES] forKey:@"mobile_net_on"];
-                [application_environment setObject:[NSNumber numberWithBool:NO] forKey:@"wifi_on"];
+                [application_environment setObject:[NSNumber numberWithInt:1] forKey:@"mobile_net_on"];
+                [application_environment setObject:[NSNumber numberWithInt:0] forKey:@"wifi_on"];
                 break;
         }
         
@@ -767,7 +767,7 @@
         }
         
         // ----handled
-        [exceptionDict setObject:[NSNumber numberWithBool:YES] forKey:@"handled"];
+        [exceptionDict setObject:[NSNumber numberWithInt:1] forKey:@"handled"];
         
         if (stacktrace.count > 0) {
             [exceptionDict setObject:stacktrace forKey:@"backtrace"];
