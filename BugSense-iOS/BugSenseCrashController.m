@@ -74,9 +74,7 @@ experienced. Do you want to get it from the App Store?", nil)
 #define kContentTextKey                 @"contentText"
 #define kURLKey                         @"url"
 
-#define LOG_NUM	20
 #define LOG_MAX	100
-#define LOG_LVL	8
 
 #pragma mark - Private interface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +124,8 @@ static BOOL                     _immediately;
 static NSString                 *_endpointURL;
 static char                     log_cache_path[512];
 static char                     ms_cache_path[512];
-
+static unsigned long            _logMessagesCount = 0;
+static unsigned long            _logMessagesLevel = 8;
 
 #pragma mark - Ivar accessors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +188,14 @@ static char                     ms_cache_path[512];
 
 + (NSString *)apiKey {
     return _APIKey;
+}
+
++ (void)setLogMessagesCount:(unsigned long)count {
+    _logMessagesCount = count;
+}
+
++ (void)setLogMessagesLevel:(unsigned long)level {
+    _logMessagesLevel = level;
 }
 
 #pragma mark - Crash callback function
@@ -515,15 +522,18 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
         fprintf(stderr, "PANICK!\n");
     
     // Store logs
-    int i, j;
-    tag_log_row m[LOG_MAX];
     
-    memset_async(m, 0x00, LOG_MAX * sizeof(tag_log_row));
-    j = get_system_log_messages(LOG_LVL, NULL, LOG_NUM, m);
-    printf("%d\n", j);
-    for (i = 0; i < j; i++)
-        printf("%d |%s|\n", i, m[i]);
-    write_to_log_file(m, log_cache_path, j);
+    if (_logMessagesCount > 0) {
+        int i, j;
+        tag_log_row m[LOG_MAX];
+        
+        memset_async(m, 0x00, LOG_MAX * sizeof(tag_log_row));
+        j = get_system_log_messages(_logMessagesLevel, NULL, _logMessagesCount, m);
+        printf("%d\n", j);
+        for (i = 0; i < j; i++)
+            printf("%d |%s|\n", i, m[i]);
+        write_to_log_file(m, log_cache_path, j);
+    }
     
     NSLog(kAdditionalInfoStored);
 }
@@ -554,6 +564,22 @@ static unsigned long long getMStime(void) { struct timeval time; gettimeofday(&t
     
     NSDictionary *additionalInfo = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:msUntilCrashNum, log, nil] 
                                                                forKeys:[NSArray arrayWithObjects:@"ms_from_start", @"log", nil]];
+    
+    // Delete the additional info files
+    NSFileManager *fileMgr = [[[NSFileManager alloc] init] autorelease];
+    NSError *error = nil;
+    
+    NSString *msCachePathStr = [NSString stringWithCString:ms_cache_path encoding:NSASCIIStringEncoding];
+    BOOL removeSuccess = [fileMgr removeItemAtPath:msCachePathStr error:&error];
+    if (!removeSuccess) {
+        NSLog(@"BugSense --> Error removing ms cache");
+    }
+    
+    NSString *logCachePathStr = [NSString stringWithCString:log_cache_path encoding:NSASCIIStringEncoding];
+    removeSuccess = [fileMgr removeItemAtPath:logCachePathStr error:&error];
+    if (!removeSuccess) {
+        NSLog(@"BugSense --> Error removing log cache");
+    }
     
     // Preparing the JSON string
     NSData *jsonData = [BugSenseJSONGenerator JSONDataFromCrashReport:report userDictionary:_userDictionary additionalInfo:additionalInfo];

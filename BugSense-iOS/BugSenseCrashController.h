@@ -47,6 +47,9 @@ OBJC_EXPORT @interface BugSenseCrashController : NSObject <UIAlertViewDelegate>
                                                    endpointURL:(NSString *)endpointURL 
                                                sendImmediately:(BOOL)immediately;
 
++ (void) setLogMessagesCount:(unsigned long)count;
++ (void) setLogMessagesLevel:(unsigned long)level;
+
 + (BOOL) logException:(NSException *)exception withTag:(NSString *)tag;
 
 + (void) startAnalyticsSession;
