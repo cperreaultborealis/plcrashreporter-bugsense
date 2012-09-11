@@ -55,7 +55,7 @@
 #define kGeneratingProcessMsg   @"BugSense --> Generating JSON data from crash report: %d/14"
 #define kGeneratingProcessExceptionMsg   @"BugSense --> Generating JSON data from exception: %d/6"
 
-#define kBugSenseFrameworkVersion @"2.0.6"
+#define kBugSenseFrameworkVersion @"2.0.7"
 #define kBugSensePlatform @"iOS"
 
 @implementation BugSenseJSONGenerator
@@ -418,8 +418,6 @@
               
         if ([self carrierName])
             [application_environment setObject:[self carrierName] forKey:@"carrier"];
-        
-        [application_environment setObject:[self languagesForReport:report] forKey:@"languages"];
 
         // ----locale
         [application_environment setObject:[[NSLocale currentLocale] localeIdentifier] forKey:@"locale"];
@@ -720,8 +718,6 @@
         
         if ([self carrierName])
             [application_environment setObject:[self carrierName] forKey:@"carrier"];
-        
-        [application_environment setObject:[self languages] forKey:@"languages"];
         
         // ----locale
         [application_environment setObject:[[NSLocale currentLocale] localeIdentifier] forKey:@"locale"];
